@@ -3,130 +3,214 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trắc Nghiệm Mảng - C Basic</title>
+    <title>Trắc Nghiệm Mảng - Duolingo Style</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f4f7f6;
-            color: #333;
             margin: 0;
             padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
             box-sizing: border-box;
         }
         .quiz-container {
             background: #fff;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            max-width: 600px;
-            margin: auto;
-        }
-        h2 { color: #0056b3; text-align: center; font-size: 24px; margin-top: 0;}
-        .question { margin-bottom: 20px; }
-        .question h3 { font-size: 16px; margin-bottom: 10px; color: #222;}
-        .options label {
-            display: block;
-            background: #e9ecef;
-            padding: 10px 15px;
-            margin-bottom: 8px;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: 0.3s;
-            font-size: 14px;
-        }
-        .options label:hover { background: #d3e0ea; }
-        input[type="radio"] { margin-right: 10px; }
-        .btn-submit {
-            background: #28a745;
-            color: white;
-            border: none;
-            padding: 12px 20px;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
             width: 100%;
-            border-radius: 5px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.3s;
+            max-width: 600px;
+            text-align: center;
         }
-        .btn-submit:hover { background: #218838; }
-        #result {
-            margin-top: 20px;
+        /* Thanh tiến trình */
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background-color: #e5e5e5;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #58cc02;
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+        
+        .question-text { font-size: 20px; font-weight: bold; color: #3c3c3c; margin-bottom: 25px; }
+        
+        .options { display: flex; flex-direction: column; gap: 12px; }
+        .option-btn {
+            background: #fff;
+            border: 2px solid #e5e5e5;
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: left;
+            font-weight: 500;
+            color: #4b4b4b;
+        }
+        .option-btn:hover { background: #f7f7f7; border-color: #d7d7d7; }
+        .option-btn.selected { border-color: #84d8ff; background: #ddf4ff; }
+        .option-btn.correct { border-color: #58cc02; background: #d7ffb8; color: #2b7a00; }
+        .option-btn.wrong { border-color: #ea2b2b; background: #ffdfe0; color: #a30000; }
+        
+        .controls { margin-top: 25px; display: flex; flex-direction: column; gap: 15px; }
+        .feedback { font-size: 18px; font-weight: bold; min-height: 24px; }
+        .feedback.success { color: #58cc02; }
+        .feedback.error { color: #ea2b2b; }
+        
+        .btn-action {
+            background: #e5e5e5;
+            color: #afafaf;
+            border: none;
+            padding: 15px;
+            border-radius: 12px;
             font-size: 18px;
             font-weight: bold;
-            text-align: center;
-            display: none;
-            padding: 15px;
-            border-radius: 5px;
+            cursor: not-allowed;
+            transition: 0.3s;
+            text-transform: uppercase;
+            box-shadow: 0 4px 0 #d7d7d7;
         }
-        .pass { background: #d4edda; color: #155724; }
-        .fail { background: #f8d7da; color: #721c24; }
+        .btn-action.active-check { background: #58cc02; color: white; cursor: pointer; box-shadow: 0 4px 0 #58a700; }
+        .btn-action.active-next { background: #1cb0f6; color: white; cursor: pointer; box-shadow: 0 4px 0 #1899d6; }
+        .btn-action:active { transform: translateY(4px); box-shadow: none !important; }
+
+        .result-screen { display: none; }
+        .result-score { font-size: 40px; color: #58cc02; font-weight: bold; margin: 20px 0; }
     </style>
 </head>
 <body>
 
 <div class="quiz-container">
-    <h2>Kiểm tra kiến thức: Mảng</h2>
-    <form id="quizForm">
-        <div class="question">
-            <h3>1. Chỉ số (index) của phần tử đầu tiên trong mảng C bắt đầu từ số mấy?</h3>
-            <div class="options">
-                <label><input type="radio" name="q1" value="0"> a. 0</label>
-                <label><input type="radio" name="q1" value="1"> b. 1</label>
-                <label><input type="radio" name="q1" value="-1"> c. -1</label>
-            </div>
+    <div id="quiz-screen">
+        <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+        <div class="question-text" id="question">Đang tải câu hỏi...</div>
+        <div class="options" id="options"></div>
+        <div class="controls">
+            <div class="feedback" id="feedback"></div>
+            <button class="btn-action" id="main-btn" onclick="handleBtnClick()">Kiểm tra</button>
         </div>
+    </div>
 
-        <div class="question">
-            <h3>2. Khai báo int arr[5]; thì phần tử cuối cùng của mảng là gì?</h3>
-            <div class="options">
-                <label><input type="radio" name="q2" value="arr[5]"> a. arr[5]</label>
-                <label><input type="radio" name="q2" value="arr[4]"> b. arr[4]</label>
-                <label><input type="radio" name="q2" value="arr[0]"> c. arr[0]</label>
-            </div>
-        </div>
-
-        <div class="question">
-            <h3>3. Tên của một mảng (ví dụ: arr) đại diện cho điều gì?</h3>
-            <div class="options">
-                <label><input type="radio" name="q3" value="size"> a. Kích thước của mảng</label>
-                <label><input type="radio" name="q3" value="value"> b. Giá trị của tất cả phần tử</label>
-                <label><input type="radio" name="q3" value="address"> c. Địa chỉ của phần tử đầu tiên</label>
-            </div>
-        </div>
-
-        <button type="button" class="btn-submit" onclick="chamDiem()">Nộp Bài</button>
-    </form>
-    <div id="result"></div>
+    <div id="result-screen" class="result-screen">
+        <h2>🎉 Hoàn thành bài tập! 🎉</h2>
+        <div class="result-score" id="score-text">10 / 10</div>
+        <p>Kiến thức nền tảng của bạn cực kỳ vững chắc!</p>
+        <button class="btn-action active-next" onclick="location.reload()" style="margin-top: 20px;">Học lại từ đầu</button>
+    </div>
 </div>
 
 <script>
-    function chamDiem() {
-        let score = 0;
-        let total = 3;
+    const questions = [
+        { q: "1. Chỉ số (index) của phần tử đầu tiên trong mảng C bắt đầu từ số mấy?", options: ["Số 0", "Số 1", "Số -1"], answer: 0 },
+        { q: "2. Cho mảng int a[5]; thì phần tử cuối cùng của mảng là gì?", options: ["a[5]", "a[4]", "a[1]"], answer: 1 },
+        { q: "3. Tên của một mảng (ví dụ: arr) đại diện cho điều gì?", options: ["Kích thước mảng", "Giá trị phần tử cuối", "Địa chỉ của phần tử đầu tiên"], answer: 2 },
+        { q: "4. Cú pháp 0[arr] trong C hoàn toàn tương đương với cú pháp nào?", options: ["Mảng bị lỗi", "arr[0]", "Không có ý nghĩa"], answer: 1 },
+        { q: "5. Khi truyền mảng 1 chiều vào hàm, thực chất bạn đang truyền...", options: ["Toàn bộ giá trị mảng", "Địa chỉ cơ sở của mảng", "Kích thước của mảng"], answer: 1 },
+        { q: "6. Biểu thức *(arr + 2) tương đương với phần tử nào trong mảng?", options: ["arr[1]", "arr[3]", "arr[2]"], answer: 2 },
+        { q: "7. Khởi tạo mảng int a[3] = {5}; thì giá trị của a[1] là bao nhiêu?", options: ["Giá trị rác", "Số 0", "Số 5"], answer: 1 },
+        { q: "8. Công thức sizeof(arr)/sizeof(arr[0]) dùng để làm gì?", options: ["Tính số lượng phần tử của mảng", "Tính dung lượng RAM", "Tính tổng các phần tử"], answer: 0 },
+        { q: "9. Trong C, có thể gán trực tiếp mảng A = mảng B được không?", options: ["Có, rất bình thường", "Chỉ khi dùng con trỏ", "Không, phải copy từng phần tử"], answer: 2 },
+        { q: "10. Lỗi 'Array Out of Bounds' xảy ra khi nào?", options: ["Mảng không có dữ liệu", "Khai báo mảng quá lớn", "Truy cập vị trí ngoài phạm vi mảng"], answer: 2 }
+    ];
+
+    let currentQ = 0;
+    let score = 0;
+    let selectedOption = null;
+    let state = "WAITING"; // WAITING (chờ chọn), READY (đã chọn), CHECKED (đã kiểm tra)
+
+    const questionEl = document.getElementById("question");
+    const optionsEl = document.getElementById("options");
+    const mainBtn = document.getElementById("main-btn");
+    const feedbackEl = document.getElementById("feedback");
+    const progressEl = document.getElementById("progress");
+
+    function loadQuestion() {
+        state = "WAITING";
+        selectedOption = null;
+        feedbackEl.innerHTML = "";
+        mainBtn.textContent = "Kiểm tra";
+        mainBtn.className = "btn-action";
         
-        // Lấy đáp án của người dùng
-        let q1 = document.querySelector('input[name="q1"]:checked');
-        let q2 = document.querySelector('input[name="q2"]:checked');
-        let q3 = document.querySelector('input[name="q3"]:checked');
+        let q = questions[currentQ];
+        questionEl.textContent = q.q;
+        progressEl.style.width = ((currentQ) / questions.length * 100) + "%";
 
-        // Kiểm tra đúng sai
-        if (q1 && q1.value === "0") score++;
-        if (q2 && q2.value === "arr[4]") score++;
-        if (q3 && q3.value === "address") score++;
+        optionsEl.innerHTML = "";
+        q.options.forEach((opt, index) => {
+            let btn = document.createElement("button");
+            btn.className = "option-btn";
+            btn.textContent = opt;
+            btn.onclick = () => selectOption(btn, index);
+            optionsEl.appendChild(btn);
+        });
+    }
 
-        // Hiển thị kết quả
-        let resultDiv = document.getElementById("result");
-        resultDiv.style.display = "block";
-        resultDiv.innerHTML = "Bạn đã đúng " + score + "/" + total + " câu!";
+    function selectOption(btn, index) {
+        if (state === "CHECKED") return; // Đã kiểm tra thì không cho chọn lại
+        
+        let allBtns = document.querySelectorAll(".option-btn");
+        allBtns.forEach(b => b.classList.remove("selected"));
+        
+        btn.classList.add("selected");
+        selectedOption = index;
+        
+        state = "READY";
+        mainBtn.className = "btn-action active-check";
+    }
 
-        if (score === total) {
-            resultDiv.className = "pass";
-            resultDiv.innerHTML += " <br>🎉 Xuất sắc! Phù thủy code đây rồi!";
-        } else {
-            resultDiv.className = "fail";
-            resultDiv.innerHTML += " <br>💡 Cần ôn tập lại một chút nhé!";
+    function handleBtnClick() {
+        if (state === "WAITING") return;
+
+        if (state === "READY") {
+            // Bước kiểm tra đáp án
+            let correctAnswer = questions[currentQ].answer;
+            let allBtns = document.querySelectorAll(".option-btn");
+            
+            if (selectedOption === correctAnswer) {
+                allBtns[selectedOption].classList.add("correct");
+                feedbackEl.textContent = "Tuyệt vời! Chính xác!";
+                feedbackEl.className = "feedback success";
+                score++;
+            } else {
+                allBtns[selectedOption].classList.add("wrong");
+                allBtns[correctAnswer].classList.add("correct");
+                feedbackEl.textContent = "Chưa đúng rồi! Hãy chú ý đáp án màu xanh nhé.";
+                feedbackEl.className = "feedback error";
+            }
+            
+            state = "CHECKED";
+            mainBtn.textContent = "Tiếp theo";
+            mainBtn.className = "btn-action active-next";
+            progressEl.style.width = ((currentQ + 1) / questions.length * 100) + "%";
+        } 
+        else if (state === "CHECKED") {
+            // Bước sang câu tiếp theo
+            currentQ++;
+            if (currentQ < questions.length) {
+                loadQuestion();
+            } else {
+                showResult();
+            }
         }
     }
+
+    function showResult() {
+        document.getElementById("quiz-screen").style.display = "none";
+        document.getElementById("result-screen").style.display = "block";
+        document.getElementById("score-text").textContent = score + " / " + questions.length;
+    }
+
+    // Khởi chạy câu đầu tiên
+    loadQuestion();
 </script>
 
 </body>

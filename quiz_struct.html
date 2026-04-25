@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trắc Nghiệm Struct & Con Trỏ - Duolingo Style</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+        .quiz-container {
+            background: #fff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+        /* Thanh tiến trình */
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background-color: #e5e5e5;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #58cc02;
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+        
+        .question-text { font-size: 20px; font-weight: bold; color: #3c3c3c; margin-bottom: 25px; }
+        
+        .options { display: flex; flex-direction: column; gap: 12px; }
+        .option-btn {
+            background: #fff;
+            border: 2px solid #e5e5e5;
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: left;
+            font-weight: 500;
+            color: #4b4b4b;
+        }
+        .option-btn:hover { background: #f7f7f7; border-color: #d7d7d7; }
+        .option-btn.selected { border-color: #84d8ff; background: #ddf4ff; }
+        .option-btn.correct { border-color: #58cc02; background: #d7ffb8; color: #2b7a00; }
+        .option-btn.wrong { border-color: #ea2b2b; background: #ffdfe0; color: #a30000; }
+        
+        .controls { margin-top: 25px; display: flex; flex-direction: column; gap: 15px; }
+        .feedback { font-size: 18px; font-weight: bold; min-height: 24px; }
+        .feedback.success { color: #58cc02; }
+        .feedback.error { color: #ea2b2b; }
+        
+        .btn-action {
+            background: #e5e5e5;
+            color: #afafaf;
+            border: none;
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: not-allowed;
+            transition: 0.3s;
+            text-transform: uppercase;
+            box-shadow: 0 4px 0 #d7d7d7;
+        }
+        .btn-action.active-check { background: #58cc02; color: white; cursor: pointer; box-shadow: 0 4px 0 #58a700; }
+        .btn-action.active-next { background: #1cb0f6; color: white; cursor: pointer; box-shadow: 0 4px 0 #1899d6; }
+        .btn-action:active { transform: translateY(4px); box-shadow: none !important; }
+
+        .result-screen { display: none; }
+        .result-score { font-size: 40px; color: #58cc02; font-weight: bold; margin: 20px 0; }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <div id="quiz-screen">
+        <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+        <div class="question-text" id="question">Đang tải câu hỏi...</div>
+        <div class="options" id="options"></div>
+        <div class="controls">
+            <div class="feedback" id="feedback"></div>
+            <button class="btn-action" id="main-btn" onclick="handleBtnClick()">Kiểm tra</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="result-screen">
+        <h2>🎉 Hoàn thành bài tập! 🎉</h2>
+        <div class="result-score" id="score-text">10 / 10</div>
+        <p>Kiến thức về Struct và Con trỏ của bạn rất xuất sắc!</p>
+        <button class="btn-action active-next" onclick="location.reload()" style="margin-top: 20px;">Học lại từ đầu</button>
+    </div>
+</div>
+
+<script>
+    const questions = [
+        { q: "1. Toán tử & đặt trước tên một biến (ví dụ &x) dùng để làm gì?", options: ["Nhân đôi giá trị", "Lấy địa chỉ của biến", "Lấy giá trị của con trỏ"], answer: 1 },
+        { q: "2. Để truy cập vào một thành phần (member) của một biến cấu trúc thông thường, ta dùng toán tử nào?", options: ["Dấu chấm (.)", "Dấu mũi tên (->)", "Dấu sao (*)"], answer: 0 },
+        { q: "3. Nếu p là một con trỏ trỏ đến struct SinhVien, để truy cập vào trường hoTen, cú pháp nào là ĐÚNG?", options: ["p.hoTen", "p->hoTen", "*p.hoTen"], answer: 1 },
+        { q: "4. Toán tử * đặt trước một con trỏ (ví dụ *p) có ý nghĩa gì?", options: ["Cấp phát bộ nhớ động", "Lấy địa chỉ của con trỏ", "Lấy giá trị tại địa chỉ đó"], answer: 2 },
+        { q: "5. Mục đích chính của từ khóa 'typedef' khi kết hợp với 'struct' là gì?", options: ["Tăng tốc độ chạy code", "Tạo ra một tên kiểu dữ liệu mới ngắn gọn hơn", "Bảo mật dữ liệu bên trong struct"], answer: 1 },
+        { q: "6. Kích thước (sizeof) của một biến con trỏ (ví dụ int *p) phụ thuộc vào yếu tố nào nhất?", options: ["Số lượng phần tử mảng nó trỏ tới", "Kiểu dữ liệu (int, float, char)", "Kiến trúc hệ điều hành (32-bit hay 64-bit)"], answer: 2 },
+        { q: "7. Cú pháp khai báo nào sau đây là chuẩn xác để tạo một 'con trỏ cấp 2'?", options: ["int **p;", "int *p*;", "int p**;"], answer: 0 },
+        { q: "8. Nếu ptr đang trỏ đến mảng int, lệnh ptr++ sẽ làm con trỏ dịch chuyển thêm bao nhiêu?", options: ["Chính xác 1 byte", "1 lượng bằng kích thước kiểu int", "Chuyển sang mảng khác"], answer: 1 },
+        { q: "9. Truyền con trỏ struct vào hàm thay vì truyền biến struct thông thường có lợi ích gì lớn nhất?", options: ["Tiết kiệm bộ nhớ RAM và tăng tốc độ", "Hàm không thể làm thay đổi dữ liệu gốc", "Code nhìn ngắn gọn và dễ hiểu hơn"], answer: 0 },
+        { q: "10. Khi hàm malloc() không thể cấp phát thêm bộ nhớ do RAM đã đầy, nó sẽ trả về giá trị gì?", options: ["0", "-1", "NULL"], answer: 2 }
+    ];
+
+    let currentQ = 0;
+    let score = 0;
+    let selectedOption = null;
+    let state = "WAITING"; 
+
+    const questionEl = document.getElementById("question");
+    const optionsEl = document.getElementById("options");
+    const mainBtn = document.getElementById("main-btn");
+    const feedbackEl = document.getElementById("feedback");
+    const progressEl = document.getElementById("progress");
+
+    function loadQuestion() {
+        state = "WAITING";
+        selectedOption = null;
+        feedbackEl.innerHTML = "";
+        mainBtn.textContent = "Kiểm tra";
+        mainBtn.className = "btn-action";
+        
+        let q = questions[currentQ];
+        questionEl.textContent = q.q;
+        progressEl.style.width = ((currentQ) / questions.length * 100) + "%";
+
+        optionsEl.innerHTML = "";
+        q.options.forEach((opt, index) => {
+            let btn = document.createElement("button");
+            btn.className = "option-btn";
+            btn.textContent = opt;
+            btn.onclick = () => selectOption(btn, index);
+            optionsEl.appendChild(btn);
+        });
+    }
+
+    function selectOption(btn, index) {
+        if (state === "CHECKED") return; 
+        
+        let allBtns = document.querySelectorAll(".option-btn");
+        allBtns.forEach(b => b.classList.remove("selected"));
+        
+        btn.classList.add("selected");
+        selectedOption = index;
+        
+        state = "READY";
+        mainBtn.className = "btn-action active-check";
+    }
+
+    function handleBtnClick() {
+        if (state === "WAITING") return;
+
+        if (state === "READY") {
+            let correctAnswer = questions[currentQ].answer;
+            let allBtns = document.querySelectorAll(".option-btn");
+            
+            if (selectedOption === correctAnswer) {
+                allBtns[selectedOption].classList.add("correct");
+                feedbackEl.textContent = "Tuyệt vời! Chính xác!";
+                feedbackEl.className = "feedback success";
+                score++;
+            } else {
+                allBtns[selectedOption].classList.add("wrong");
+                allBtns[correctAnswer].classList.add("correct");
+                feedbackEl.textContent = "Chưa đúng rồi! Hãy chú ý đáp án màu xanh nhé.";
+                feedbackEl.className = "feedback error";
+            }
+            
+            state = "CHECKED";
+            mainBtn.textContent = "Tiếp theo";
+            mainBtn.className = "btn-action active-next";
+            progressEl.style.width = ((currentQ + 1) / questions.length * 100) + "%";
+        } 
+        else if (state === "CHECKED") {
+            currentQ++;
+            if (currentQ < questions.length) {
+                loadQuestion();
+            } else {
+                showResult();
+            }
+        }
+    }
+
+    function showResult() {
+        document.getElementById("quiz-screen").style.display = "none";
+        document.getElementById("result-screen").style.display = "block";
+        document.getElementById("score-text").textContent = score + " / " + questions.length;
+    }
+
+    loadQuestion();
+</script>
+
+</body>
+</html>
